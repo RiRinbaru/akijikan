@@ -1,6 +1,7 @@
 import { serve } from '@hono/node-server'
 import { Hono } from 'hono'
 import { db } from './db.js'
+import { randomBytes } from 'node:crypto'
 
 const app = new Hono()
 
@@ -18,6 +19,33 @@ app.get('/api/db-check', async (c) => {
   )
 
   return c.json(result.rows[0])
+})
+
+app.post('/api/events', async (c) => {
+  const body = await c.req.json()
+
+  const slug = randomBytes(12).toString('base64url')
+
+  const result = await db.query(
+    `
+      INSERT INTO events (
+        slug,
+        title,
+        slot_minutes,
+        required_minutes
+      )
+      VALUES ($1, $2, $3, $4)
+      RETURNING *
+    `,
+    [
+      slug,
+      body.title,
+      body.slotMinutes,
+      body.requiredMinutes,
+    ]
+  )
+
+  return c.json(result.rows[0], 201)
 })
 
 serve({
