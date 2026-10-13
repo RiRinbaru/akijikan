@@ -1,17 +1,17 @@
+import { useState } from 'react'
 import './WeekCalendar.css'
-
-// 候補ごとの区間
-type EventWindow = {
-    id: string
-    start_at: string
-    end_at: string
-}
+import type {
+    EventWindow,
+    DraftWindow,
+} from '../types/calendar'
 
 // WeekCalendarが必要な情報
 type WeekCalendarProps = {
     startDate: string
     endDate: string
     windows: EventWindow[]
+    onWindowCreate?: (window: DraftWindow) => void
+    onWindowDelete?: (id: string) => void
 }
 
 const MINUTES_PER_DAY = 1440
@@ -59,8 +59,8 @@ function getWindowStyle(
     window: EventWindow,
     date: Date
 ) {
-    const windowStart = new Date(window.start_at)
-    const windowEnd = new Date(window.end_at)
+    const windowStart = window.startAt
+    const windowEnd = window.endAt
 
     const dayStart = new Date(
         date.getFullYear(),
@@ -111,18 +111,108 @@ function getWindowStyle(
     }
 }
 
+// ドラッグしたところを今変更してる状態にする
+function pointerToDate(
+    event: React.PointerEvent<HTMLDivElement>,
+    date: Date
+) {
+    const rect =
+        event.currentTarget.getBoundingClientRect()
+
+    const y = event.clientY - rect.top
+
+    const ratio = Math.min(
+        1,
+        Math.max(0, y / rect.height)
+    )
+
+    const minutes = Math.round(
+        ratio * MINUTES_PER_DAY
+    )
+
+    const result = new Date(date)
+
+    result.setHours(0, minutes, 0, 0)
+
+    return result
+}
+
 // ほんへ
 function WeekCalendar({
     startDate,
     endDate,
     windows,
+    onWindowCreate,
+    onWindowDelete,
 }: WeekCalendarProps) {
     const dates = getDates(startDate, endDate)
+    const [draftWindow, setDraftWindow] = useState<DraftWindow | null>(null)
 
     const hours = Array.from(
         { length: 24 },
         (_, i) => i
     )
+
+    //ドラッグ開始
+    function handlePointerDown(
+        event: React.PointerEvent<HTMLDivElement>,
+        date: Date
+    ) {
+        const time = pointerToDate(event, date)
+
+        event.currentTarget.setPointerCapture(
+            event.pointerId
+        )
+
+        setDraftWindow({
+            startAt: time,
+            endAt: time,
+        })
+    }
+
+    //ドラッグ中
+    function handlePointerMove(
+        event: React.PointerEvent<HTMLDivElement>,
+        date: Date
+    ) {
+        if (draftWindow === null) {
+            return
+        }
+
+        const time = pointerToDate(event, date)
+
+        setDraftWindow({
+            ...draftWindow,
+            endAt: time,
+        })
+    }
+
+    //ドラッグ終了
+    function handlePointerUp() {
+        if (draftWindow === null) {
+            return
+        }
+
+        const startAt =
+            draftWindow.startAt < draftWindow.endAt
+                ? draftWindow.startAt
+                : draftWindow.endAt
+
+        const endAt =
+            draftWindow.startAt < draftWindow.endAt
+                ? draftWindow.endAt
+                : draftWindow.startAt
+
+        // クリックしただけなら区間を作らない
+        if (startAt.getTime() !== endAt.getTime()) {
+            onWindowCreate?.({
+                startAt,
+                endAt,
+            })
+        }
+
+        setDraftWindow(null)
+    }
 
     return (
         <div className="week-calendar">
@@ -155,6 +245,13 @@ function WeekCalendar({
                     <div
                         className="day-column"
                         key={date.toISOString()}
+                        onPointerDown={(event) =>
+                            handlePointerDown(event, date)
+                        }
+                        onPointerMove={(event) =>
+                            handlePointerMove(event, date)
+                        }
+                        onPointerUp={handlePointerUp}
                     >
                         {hours.map((hour) => (
                             <div
@@ -178,12 +275,57 @@ function WeekCalendar({
                                     key={window.id}
                                     className="event-window"
                                     style={{
-                                        top: `${style.top}px`,
-                                        height: `${style.height}px`,
+                                        top: `${style.top}%`,
+                                        height: `${style.height}%`,
+                                    }}
+                                    onPointerDown={(event) => {
+                                        event.stopPropagation()
+                                    }}
+                                    onClick={(event) => {
+                                        event.stopPropagation()
+                                        onWindowDelete?.(window.id)
                                     }}
                                 />
                             )
                         })}
+
+                        {draftWindow !== null &&
+                            draftWindow.startAt.toDateString() ===
+                            date.toDateString() && (() => {
+                                const start =
+                                    draftWindow.startAt <
+                                        draftWindow.endAt
+                                        ? draftWindow.startAt
+                                        : draftWindow.endAt
+
+                                const end =
+                                    draftWindow.startAt <
+                                        draftWindow.endAt
+                                        ? draftWindow.endAt
+                                        : draftWindow.startAt
+
+                                const startMinutes =
+                                    minutesFromStartOfDay(start)
+
+                                const durationMinutes =
+                                    (end.getTime() - start.getTime()) /
+                                    1000 /
+                                    60
+
+                                return (
+                                    <div
+                                        className="draft-window"
+                                        style={{
+                                            top: `${minutesToPercent(
+                                                startMinutes
+                                            )}%`,
+                                            height: `${minutesToPercent(
+                                                durationMinutes
+                                            )}%`,
+                                        }}
+                                    />
+                                )
+                            })()}
                     </div>
                 ))}
             </div>

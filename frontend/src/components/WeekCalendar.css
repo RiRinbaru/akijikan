@@ -70,3 +70,17 @@
     border-radius: 4px;
     box-sizing: border-box;
 }
+
+.draft-window {
+    position: absolute;
+    left: 4px;
+    right: 4px;
+
+    background: rgba(80, 180, 120, 0.35);
+    border: 1px dashed rgba(80, 180, 120, 0.9);
+
+    border-radius: 4px;
+    box-sizing: border-box;
+
+    pointer-events: none;
+}
