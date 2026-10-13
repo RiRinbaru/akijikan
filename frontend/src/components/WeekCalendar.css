@@ -6,7 +6,6 @@
 
 .calendar-header {
     display: grid;
-    grid-template-columns: 80px repeat(7, minmax(120px, 1fr));
     position: sticky;
     top: 0;
     background: white;
@@ -29,7 +28,6 @@
 
 .calendar-body {
     display: grid;
-    grid-template-columns: 80px repeat(7, minmax(120px, 1fr));
 }
 
 .time-column {

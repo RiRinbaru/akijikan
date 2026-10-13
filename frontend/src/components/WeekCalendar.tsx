@@ -146,6 +146,8 @@ function WeekCalendar({
     onWindowDelete,
 }: WeekCalendarProps) {
     const dates = getDates(startDate, endDate)
+    const gridTemplateColumns =
+        `80px repeat(${dates.length}, minmax(120px, 1fr))`
     const [draftWindow, setDraftWindow] = useState<DraftWindow | null>(null)
 
     const hours = Array.from(
@@ -216,7 +218,12 @@ function WeekCalendar({
 
     return (
         <div className="week-calendar">
-            <div className="calendar-header">
+            <div
+                className="calendar-header"
+                style={{
+                    gridTemplateColumns,
+                }}
+            >
                 <div className="time-header" />
 
                 {dates.map((date) => (
@@ -229,7 +236,12 @@ function WeekCalendar({
                 ))}
             </div>
 
-            <div className="calendar-body">
+            <div
+                className="calendar-body"
+                style={{
+                    gridTemplateColumns,
+                }}
+            >
                 <div className="time-column">
                     {hours.map((hour) => (
                         <div
