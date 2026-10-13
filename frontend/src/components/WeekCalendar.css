@@ -1,0 +1,72 @@
+.week-calendar {
+    width: 100%;
+    overflow: auto;
+    border: 1px solid #ccc;
+}
+
+.calendar-header {
+    display: grid;
+    grid-template-columns: 80px repeat(7, minmax(120px, 1fr));
+    position: sticky;
+    top: 0;
+    background: white;
+    z-index: 10;
+}
+
+.time-header,
+.day-header {
+    height: 50px;
+    border-bottom: 1px solid #ccc;
+}
+
+.day-header {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-left: 1px solid #ccc;
+    font-weight: bold;
+}
+
+.calendar-body {
+    display: grid;
+    grid-template-columns: 80px repeat(7, minmax(120px, 1fr));
+}
+
+.time-column {
+    position: sticky;
+    left: 0;
+    background: white;
+    z-index: 5;
+}
+
+.time-label {
+    height: 60px;
+    box-sizing: border-box;
+    padding-right: 8px;
+    text-align: right;
+    font-size: 12px;
+    border-bottom: 1px solid #ddd;
+}
+
+.day-column {
+    position: relative;
+    border-left: 1px solid #ccc;
+}
+
+.hour-row {
+    height: 60px;
+    box-sizing: border-box;
+    border-bottom: 1px solid #ddd;
+}
+
+.event-window {
+    position: absolute;
+    left: 4px;
+    right: 4px;
+
+    background: rgba(100, 150, 255, 0.35);
+    border: 1px solid rgba(100, 150, 255, 0.8);
+
+    border-radius: 4px;
+    box-sizing: border-box;
+}
